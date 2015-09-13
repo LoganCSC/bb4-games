@@ -13,7 +13,7 @@ import com.barrybecker4.game.common.MoveList;
  *  Assumes an M*N grid.
  *  Legal positions are [1, numRows_][1, numCols_]
  *
- *  Games like pente, go, chess, checkers, go-moku,
+ *  Games like gomoku, go, chess, checkers, go-moku,
  *  shoji, othello, connect4, squares, Stratego, Blockade fit this pattern.
  *  Other games like Risk, Galactic Empire, or Monopoly and might be supportable in the future.
  *  They are harder because they do not have perfect information (i.e. they use dice).
@@ -21,7 +21,7 @@ import com.barrybecker4.game.common.MoveList;
  *
  *  @author Barry Becker
  */
-public abstract class Board implements IRectangularBoard {
+public abstract class Board<M extends Move> implements IRectangularBoard<M> {
 
     /** the internal data structures representing the game board and the positions on it. */
     protected BoardPositions positions_;
@@ -30,21 +30,21 @@ public abstract class Board implements IRectangularBoard {
      * We keep a list of the moves that have been made.
      * We can navigate forward or backward in time using this
      */
-    private MoveList moveList_;
+    private MoveList<M> moveList_;
 
 
     /**
      * Default constructor
      */
     public Board() {
-        moveList_ = new MoveList();
+        moveList_ = new MoveList<>();
     }
 
     /**
      * Copy constructor.
      * Makes a deep copy of the board and all its parts.
      */
-    protected Board(Board b) {
+    protected Board(Board<M> b) {
         this();
         this.setSize(b.getNumRows(), b.getNumCols());
 
@@ -98,7 +98,7 @@ public abstract class Board implements IRectangularBoard {
      * consider making a defensive copy to avoid concurrent modification exception.
      * @return moves made so far.
      */
-    public MoveList getMoveList() {
+    public MoveList<M> getMoveList() {
         return moveList_;
     }
 
@@ -125,7 +125,7 @@ public abstract class Board implements IRectangularBoard {
      * @return false if the move is illegal
      */
     @Override
-    public final boolean makeMove( Move move ) {
+    public boolean makeMove(M move ) {
         boolean legal = makeInternalMove(move);
         getMoveList().add( move );
         return legal;
@@ -136,9 +136,9 @@ public abstract class Board implements IRectangularBoard {
      * @return  the move that got undone
      */
     @Override
-    public Move undoMove() {
+    public M undoMove() {
         if ( !getMoveList().isEmpty() ) {
-            Move move = getMoveList().removeLast();
+            M move = getMoveList().removeLast();
             undoInternalMove( move );
             return move;
         }
@@ -167,13 +167,13 @@ public abstract class Board implements IRectangularBoard {
      * @param move the move to make
      * @return false if the move is illegal (true if legal)
      */
-    protected abstract boolean makeInternalMove( Move move );
+    protected abstract boolean makeInternalMove( M move );
 
     /**
      * Allow reverting a move so we can step backwards in time.
      * Board is returned to the exact state it was in before the last move was made.
      */
-    protected abstract void undoInternalMove( Move move );
+    protected abstract void undoInternalMove( M move );
 
     /**
      * @return true if the specified position is within the bounds of the board

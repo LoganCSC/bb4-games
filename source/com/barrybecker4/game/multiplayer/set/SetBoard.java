@@ -2,6 +2,7 @@
 package com.barrybecker4.game.multiplayer.set;
 
 import com.barrybecker4.game.common.board.IBoard;
+import com.barrybecker4.game.common.Move;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -13,7 +14,7 @@ import java.util.List;
  *
  * @author Barry Becker
  */
-public class SetBoard implements IBoard {
+public class SetBoard implements IBoard<Move> {
 
     /** the deck is like the board or model  */
     private List<Card> deck_;
@@ -115,7 +116,7 @@ public class SetBoard implements IBoard {
     }
 
     private List<Card> getCardsOnBoard() {
-        List<Card> cardsOnBoard = new LinkedList<Card>();
+        List<Card> cardsOnBoard = new LinkedList<>();
         for (int i = 0; i < getNumCardsShowing(); i++ ) {
             cardsOnBoard.add(getDeck().get(i));
         }
@@ -127,7 +128,7 @@ public class SetBoard implements IBoard {
     }
 
     public List<Card> getSelectedCards(){
-        List<Card> selected = new ArrayList<Card>();
+        List<Card> selected = new ArrayList<>();
         for (int i = 0; i<getNumCardsShowing(); i++ ) {
             Card card = getDeck().get(i);
             if (card.isSelected()) {
@@ -151,5 +152,14 @@ public class SetBoard implements IBoard {
      */
     public boolean isDone() {
         return !Card.hasSet(deck_);
+    }
+
+
+    public boolean makeMove(Move move) {
+        throw new UnsupportedOperationException("make move not supportd for set.");
+    }
+
+    public Move undoMove() {
+        throw new UnsupportedOperationException("undo move not supportd for set.");
     }
 }

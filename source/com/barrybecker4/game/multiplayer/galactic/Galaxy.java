@@ -2,7 +2,7 @@
 package com.barrybecker4.game.multiplayer.galactic;
 
 import com.barrybecker4.game.common.GameContext;
-import com.barrybecker4.game.common.Move;
+import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.common.board.Board;
 import com.barrybecker4.game.common.board.BoardPosition;
 import com.barrybecker4.game.common.player.Player;
@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * @author Barry Becker
  */
-public class Galaxy extends Board {
+public class Galaxy extends Board<GalacticTurn> {
 
     private static final int DEFAULT_NUM_PLANETS = 20;
     public static final int MAX_NUM_PLANETS = 80;
@@ -48,7 +48,8 @@ public class Galaxy extends Board {
     // Does not change during the game.
     private static List<Planet> planets_ = null;
 
-    private static Map<Character,Planet> hmPlanets_ = new HashMap<Character,Planet>();
+    private static Map<Character,Planet> hmPlanets_ = new HashMap<>();
+
 
 
     /** constructor
@@ -75,7 +76,7 @@ public class Galaxy extends Board {
         numPlanets_ = options.getNumPlanets();
 
         if (planets_ == null)  {
-            planets_ = new ArrayList<Planet>();
+            planets_ = new ArrayList<>();
         }
 
         planets_.clear();
@@ -121,7 +122,7 @@ public class Galaxy extends Board {
      */
     public static List<Planet> getPlanets()
     {
-        return new ArrayList<Planet>(planets_);
+        return new ArrayList<>(planets_);
     }
 
     /**
@@ -132,7 +133,7 @@ public class Galaxy extends Board {
     {
         if (player==null)
             return getPlanets();
-        List<Planet> playerPlanets = new ArrayList<Planet>();
+        List<Planet> playerPlanets = new ArrayList<>();
         for (Planet planet : planets_) {
 
             if (planet.getOwner() == player)
@@ -169,7 +170,7 @@ public class Galaxy extends Board {
      */
     public static Planet getPlanet(char name) {
         Planet p = hmPlanets_.get(name);
-        assert(p!=null);
+        assert (p != null);
         return p;
     }
 
@@ -186,12 +187,12 @@ public class Galaxy extends Board {
      * @return false if the move is illegal.
      */
     @Override
-    protected boolean makeInternalMove( Move move ) {
+    protected boolean makeInternalMove( GalacticTurn move ) {
         // first allow all the planets to build for the year
         build();
         // go through all the battle results in order and adjust the planets to account for one elapsed year.
+        getMoveList().add(move);
 
-        //GalacticTurn gmove = (GalacticTurn)move;
         //destPlanet.setOwner( battle.getOwnerAfterAttack());
         //destPlanet.setNumShips( battle.getNumShipsAfterAttack() );
         return true;
@@ -202,16 +203,12 @@ public class Galaxy extends Board {
             aPlanets_.incrementYear();
     }
 
-
-    public void higlightPlanet() {
-    }
-
     /**
      * For galactic empire, undoing a move means turning time back a year and
      * restoring the state of the game one full turn earlier
      */
     @Override
-    protected void undoInternalMove( Move move ) {
+    protected void undoInternalMove( GalacticTurn move ) {
         GameContext.log(0,  "undo no implemented yet." );
     }
 

@@ -3,6 +3,7 @@ package com.barrybecker4.game.twoplayer.common.search.strategy;
 
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
+import com.barrybecker4.game.twoplayer.common.TwoPlayerBoard;
 import com.barrybecker4.game.twoplayer.common.search.SearchWindow;
 import com.barrybecker4.game.twoplayer.common.search.Searchable;
 import com.barrybecker4.game.twoplayer.common.search.tree.SearchTreeNode;
@@ -13,35 +14,38 @@ import com.barrybecker4.optimization.parameter.ParameterArray;
  * This is the simplest search strategy to which the other variants are compared.
  * @author Barry Becker
  */
-public final class MiniMaxStrategy extends AbstractBruteSearchStrategy
-{
+public final class MiniMaxStrategy<M extends TwoPlayerMove, B extends TwoPlayerBoard<M>>
+        extends AbstractBruteSearchStrategy<M, B> {
+
     /**
      * Constructor for the strategy.
      */
-    public MiniMaxStrategy(Searchable controller, ParameterArray weights) {
+    public MiniMaxStrategy(Searchable<M, B> controller, ParameterArray weights) {
         super(controller, weights);
     }
 
     @Override
-    protected TwoPlayerMove findBestMove(TwoPlayerMove lastMove, int depth, MoveList list,
-                                         SearchWindow window, SearchTreeNode parent) {
+    protected M findBestMove(M lastMove, int depth, MoveList<M> list,
+                             SearchWindow window, SearchTreeNode parent) {
         int i = 0;
         int selectedValue;
-        TwoPlayerMove selectedMove;
+        M selectedMove;
+        // lastMove is the opponent player.
         // if player 1, then search for a high score, else search for a low score.
-        boolean player1 = lastMove.isPlayer1();
-        int bestInheritedValue = player1? SearchStrategy.INFINITY: -SearchStrategy.INFINITY;
+        boolean player1ToMove = !lastMove.isPlayer1();
+        int bestInheritedValue = player1ToMove ? -SearchStrategy.INFINITY: SearchStrategy.INFINITY;
 
-        TwoPlayerMove bestMove = (TwoPlayerMove)list.get(0);
-        while ( !list.isEmpty() ) {
+        M bestMove = list.get(0);
+        while (!list.isEmpty()) {
             if (pauseInterrupted())
                 return lastMove;
 
-            TwoPlayerMove theMove = getNextMove(list);
+            M theMove = getNextMove(list);
             updatePercentDone(depth, list);
 
             searchable.makeInternalMove( theMove );
-            SearchTreeNode child = addNodeToTree(parent, theMove, window); i++;
+            SearchTreeNode child = addNodeToTree(parent, theMove, window);
+            i++;
 
             // recursive call
             selectedMove = searchInternal( theMove, depth-1, window.copy(), child );
@@ -50,18 +54,18 @@ public final class MiniMaxStrategy extends AbstractBruteSearchStrategy
 
             if (selectedMove != null) {
                 selectedValue = selectedMove.getInheritedValue();
-                if ( player1 ) {
-                    if ( selectedValue < bestInheritedValue ) {
+                if ( player1ToMove ) {
+                    if ( selectedValue > bestInheritedValue ) {
                         bestMove = theMove;
                         bestInheritedValue = bestMove.getInheritedValue();
                     }
                 }
-                else if ( selectedValue > bestInheritedValue ) {
+                else if ( selectedValue < bestInheritedValue ) {
                     bestMove = theMove;
                     bestInheritedValue = bestMove.getInheritedValue();
                 }
 
-                if (alphaBeta_ && pruneAtCurrentNode(window, selectedValue, player1)) {
+                if (alphaBeta_ && pruneAtCurrentNode(window, selectedValue, player1ToMove)) {
                     showPrunedNodesInTree(list, parent, i, selectedValue, window);
                     break;
                 }
@@ -75,18 +79,11 @@ public final class MiniMaxStrategy extends AbstractBruteSearchStrategy
 
     /**
      * Note: The SearchWindow may be adjusted as a side effect.
-     * @return  whether or not we should prune the current subtree.
+     * @param player1ToMove true if player one's turn to move
+     * @return whether or not we should prune the current subtree.
      */
-    private boolean pruneAtCurrentNode(SearchWindow window, int selectedValue, boolean player1) {
-        if ( player1 && (selectedValue < window.alpha) ) {
-            if ( selectedValue < window.beta ) {
-                return true;
-            }
-            else {
-                window.alpha = selectedValue;
-            }
-        }
-        if ( !player1 && (selectedValue > window.beta) ) {
+    private boolean pruneAtCurrentNode(SearchWindow window, int selectedValue, boolean player1ToMove) {
+        if (player1ToMove && (selectedValue > window.beta)) {
             if ( selectedValue > window.alpha ) {
                 return true;
             }
@@ -94,11 +91,24 @@ public final class MiniMaxStrategy extends AbstractBruteSearchStrategy
                 window.beta = selectedValue;
             }
         }
+        if (!player1ToMove && (selectedValue < window.alpha)) {
+            if ( selectedValue < window.beta ) {
+                return true;
+            }
+            else {
+                window.alpha = selectedValue;
+            }
+        }
         return false;
     }
 
     @Override
-    protected boolean fromPlayer1sPerspective(TwoPlayerMove lastMove) {
+    protected boolean fromPlayer1sPerspective(M lastMove) {
         return true;
+    }
+
+    @Override
+    public EvaluationPerspective getEvaluationPerspective() {
+        return EvaluationPerspective.ALWAYS_PLAYER1;
     }
 }

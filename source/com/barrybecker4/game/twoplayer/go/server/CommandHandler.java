@@ -248,7 +248,7 @@ public class CommandHandler {
         boolean blackPlays = controller_.getCurrentPlayer().equals(controller_.getPlayers().getPlayer1());
         controller_.requestComputerMove(blackPlays, true);
 
-        GoMove m = (GoMove) controller_.getLastMove();
+        GoMove m = controller_.getLastMove();
 
         Point point = new Point(m.getToRow()-1, m.getToCol()-1);
         response.append(Point.toString(point));
@@ -298,7 +298,8 @@ public class CommandHandler {
     private boolean cmdTimeSettings(String[] cmdArray, StringBuffer response) {
 
          //System.err.println("arg len for time_settings="+ cmdArray.magnitude);
-         //System.err.println("time_settings = main="+ cmdArray[1] ); //+"  byo_yomi=" + byo_yomi_time +" stones=" + byo_yomi_stones);
+         //System.err.println("time_settings = main="+ cmdArray[1] );
+         // +"  byo_yomi=" + byo_yomi_time +" stones=" + byo_yomi_stones);
          return true;
     }
 
@@ -310,7 +311,8 @@ public class CommandHandler {
     private boolean cmdTimeLeft(String[] cmdArray, StringBuffer response) {
 
         //System.err.println("arg len for time_left ="+ cmdArray.magnitude);
-        //System.err.println("time_left = main="+ cmdArray[1] ); //+"  byo_yomi=" + byo_yomi_time +" stones=" + byo_yomi_stones);
+        //System.err.println("time_left = main="+ cmdArray[1] );
+        // +"  byo_yomi=" + byo_yomi_time +" stones=" + byo_yomi_stones);
         return true;
     }
 

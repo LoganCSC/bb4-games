@@ -10,9 +10,9 @@ import com.barrybecker4.game.twoplayer.common.search.SearchWindow;
  *
  * @author Barry Becker
  */
-public class Entry {
+public class Entry<M extends TwoPlayerMove> {
 
-    public TwoPlayerMove bestMove;
+    public M bestMove;
     public int upperValue;
     public int lowerValue;
     public int depth;
@@ -20,7 +20,7 @@ public class Entry {
     /**
      * Constructor.
      */
-    public Entry(TwoPlayerMove bestMove, int depth, SearchWindow window) {
+    public Entry(M bestMove, int depth, SearchWindow window) {
          this.bestMove = bestMove;
          this.upperValue = window.beta;
          this.lowerValue = window.alpha;
@@ -32,7 +32,7 @@ public class Entry {
      * Use this version if the upper and lower bounds are the same.
      * We must be at level 0 in this case
      */
-    public Entry(TwoPlayerMove bestMove, int value) {
+    public Entry(M bestMove, int value) {
          this.bestMove = bestMove;
          this.upperValue = value;
          this.lowerValue = value;
@@ -40,10 +40,7 @@ public class Entry {
     }
 
     public String toString() {
-        StringBuilder bldr = new StringBuilder();
-        bldr.append("Entry depth=").append(depth);
-        bldr.append(" bestMove=").append(bestMove);
-        bldr.append(" range=[").append(lowerValue).append(", ").append(upperValue).append("]");
-        return bldr.toString();
+        return "Entry depth=" + depth + " bestMove=" + bestMove
+                + " range=[" + lowerValue + ", " + upperValue + "]";
     }
 }

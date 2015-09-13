@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE search-test-example SYSTEM "http://barrybecker4.com/schema/search-test-case.dtd">
+<search-test-example name="basic-WPI-tree">
+    <test-cases>
+        <test-case strategy="MiniMaxStrategy" rootPlayer1="false" notes="Winning move for look ahead 3">
+            <brute-force-options look-ahead="3" alpha-beta="false" />
+            <expected-search-result move-id="2" inherited-value="5" num-moves-considered="9"/>
+        </test-case>
+        <test-case strategy="MiniMaxStrategy" rootPlayer1="true" notes="Winning move for look ahead 3">
+            <brute-force-options look-ahead="3" alpha-beta="false" />
+            <expected-search-result move-id="1" inherited-value="4" num-moves-considered="9"/>
+        </test-case>
+        <test-case strategy="MiniMaxStrategy" rootPlayer1="false" notes="Winning move for look ahead 3 (alpha/beta)">
+            <brute-force-options look-ahead="3" alpha-beta="true" quiescence="false" max-quiescent-depth="3"/>
+            <expected-search-result move-id="2" inherited-value="5" num-moves-considered="9"/>
+        </test-case>
+        <test-case strategy="MiniMaxStrategy" rootPlayer1="true" notes="Winning move for look ahead 3 (alpha/beta)">
+            <brute-force-options look-ahead="3" alpha-beta="true" quiescence="false" max-quiescent-depth="3"/>
+            <expected-search-result move-id="1" inherited-value="4" num-moves-considered="7"/>
+        </test-case>
+
+        <!-- reversed ? -->
+        <test-case strategy="NegaMaxStrategy" rootPlayer1="false" notes="Winning next move for depth 3">
+              <brute-force-options look-ahead="3" alpha-beta="false" />
+              <expected-search-result move-id="2" inherited-value="5" num-moves-considered="9"/>
+        </test-case>
+        <test-case strategy="NegaMaxStrategy" rootPlayer1="true" notes="Winning next move for depth 3">
+              <brute-force-options look-ahead="3" alpha-beta="true" />
+              <expected-search-result move-id="2" inherited-value="-5" num-moves-considered="9"/>
+        </test-case>
+
+        <test-case strategy="NegaScoutStrategy" notes="Winning next move for depth 3">
+              <brute-force-options look-ahead="3" alpha-beta="false" />
+              <expected-search-result move-id="2" inherited-value="-5" num-moves-considered="11"/>
+        </test-case>
+
+        <!--test-case strategy="NegaMaxMemoryStrategy" notes="Winning next move for depth 3">
+              <brute-force-options look-ahead="3" alpha-beta="false" />
+              <expected-search-result move-id="2" inherited-value="-16" num-moves-considered="15"/>
+        </test-case>
+        <test-case strategy="NegaScoutMemoryStrategy" notes="Winning next move for depth 3">
+              <brute-force-options look-ahead="3" alpha-beta="false" quiescence="false" max-quiescent-depth="3"/>
+              <expected-search-result move-id="2" inherited-value="-16" num-moves-considered="12"/>
+        </test-case>
+        <test-case strategy="UctStrategy" notes="Winning next move for depth 3">
+              <monte-carlo-options max-simulations="10" explore-exploit-ratio="1.0" random-look-ahead="3" />
+              <expected-search-result move-id="2" inherited-value="16" num-moves-considered="10"/>
+        </test-case-->
+
+
+    </test-cases>
+
+    <!-- this simple example is from http://web.cs.wpi.edu/~rich/courses/imgd4000-d10/lectures/E-MiniMax.pdf -->
+    <node value="6">
+        <node value="5">
+             <node value="3"/>
+             <node value="9"/>
+        </node>
+        <node value="7">
+             <node value="4"/>
+        </node>
+        <node value="8">
+             <node value="5"/>
+             <node value="6"/>
+             <node value="7"/>
+        </node>
+    </node>
+</search-test-example>
+
+
+

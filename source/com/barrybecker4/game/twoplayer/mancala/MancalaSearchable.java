@@ -3,9 +3,11 @@ package com.barrybecker4.game.twoplayer.mancala;
 
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.common.player.PlayerList;
-import com.barrybecker4.game.twoplayer.common.TwoPlayerBoard;
-import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerSearchable;
+import com.barrybecker4.game.twoplayer.mancala.board.MancalaBoard;
+import com.barrybecker4.game.twoplayer.mancala.move.MancalaMove;
+import com.barrybecker4.game.twoplayer.mancala.move.MancalaMoveGenerator;
+import com.barrybecker4.game.twoplayer.mancala.move.MoveEvaluator;
 import com.barrybecker4.optimization.parameter.ParameterArray;
 
 /**
@@ -13,13 +15,13 @@ import com.barrybecker4.optimization.parameter.ParameterArray;
  *
  * @author Barry Becker
 */
-public class MancalaSearchable extends TwoPlayerSearchable {
+public class MancalaSearchable extends TwoPlayerSearchable<MancalaMove, MancalaBoard> {
 
     private MoveEvaluator moveEvaluator;
     private MancalaMoveGenerator generator;
 
     /** Constructor */
-    public MancalaSearchable(TwoPlayerBoard board, PlayerList players) {
+    public MancalaSearchable(MancalaBoard board, PlayerList players) {
         super(board, players);
         init();
     }
@@ -41,8 +43,9 @@ public class MancalaSearchable extends TwoPlayerSearchable {
 
     @Override
     public MancalaBoard getBoard() {
-        return (MancalaBoard) board_;
+        return board_;
     }
+
 
     /**
      * Statically evaluate the board position.
@@ -50,7 +53,7 @@ public class MancalaSearchable extends TwoPlayerSearchable {
      *  a large positive value means that the move is good from player1's viewpoint
      */
     @Override
-    public int worth(TwoPlayerMove lastMove, ParameterArray weights ) {
+    public int worth(MancalaMove lastMove, ParameterArray weights ) {
         return moveEvaluator.worth(getBoard(), lastMove, weights);
     }
 
@@ -58,7 +61,7 @@ public class MancalaSearchable extends TwoPlayerSearchable {
      * generate all possible next moves.
      */
     @Override
-    public MoveList generateMoves(TwoPlayerMove lastMove, ParameterArray weights) {
+    public MoveList<MancalaMove> generateMoves(MancalaMove lastMove, ParameterArray weights) {
         return generator.generateMoves(this, lastMove, weights);
     }
 
@@ -68,7 +71,7 @@ public class MancalaSearchable extends TwoPlayerSearchable {
      * @return Set of moves the moves that result in a certain win or a certain loss.
      */
     @Override
-    public MoveList generateUrgentMoves(TwoPlayerMove lastMove, ParameterArray weights) {
+    public MoveList<MancalaMove> generateUrgentMoves(MancalaMove lastMove, ParameterArray weights) {
         return generator.generateUrgentMoves(this, lastMove, weights);
     }
 
@@ -77,7 +80,7 @@ public class MancalaSearchable extends TwoPlayerSearchable {
      * @return true if the last move created a big change in the score
      */
     @Override
-    public boolean inJeopardy( TwoPlayerMove move, ParameterArray weights ) {
+    public boolean inJeopardy(MancalaMove move, ParameterArray weights ) {
         if (move == null)
             return false;
         double newValue = worth(move, weights);

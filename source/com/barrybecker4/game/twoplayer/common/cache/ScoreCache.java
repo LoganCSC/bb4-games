@@ -18,7 +18,7 @@ import com.barrybecker4.game.twoplayer.common.search.transposition.HashKey;
  */
 public class ScoreCache extends LRUCache<HashKey, ScoreEntry> {
 
-    /** Size of the table. If bigger, will take longer before we have to recycle positions. */
+    /** Size of the table. If bigger, it will take longer before we have to recycle positions. */
     private static final int MAX_ENTRIES = 110000;
 
     private int cacheHits = 0;
@@ -53,12 +53,8 @@ public class ScoreCache extends LRUCache<HashKey, ScoreEntry> {
     }
 
     public String toString() {
-        StringBuilder bldr = new StringBuilder("ScoreCache [\n");
-        bldr.append("numEntries=").append(numEntries());
-        bldr.append(" hits").append(this.getCacheHits());
-        bldr.append(" misses=").append(this.getCacheMisses());
-        bldr.append("\n]");
-        return bldr.toString();
+        return "ScoreCache [\n" + "numEntries=" + numEntries() + " hits" +
+                getCacheHits() + " misses=" + this.getCacheMisses() + "\n]";
     }
 
 }

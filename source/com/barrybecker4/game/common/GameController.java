@@ -1,9 +1,7 @@
-/** Copyright by Barry G. Becker, 2000-2011. Licensed under MIT License: http://www.opensource.org/licenses/MIT  */
+/** Copyright by Barry G. Becker, 2000-2014. Licensed under MIT License: http://www.opensource.org/licenses/MIT  */
 package com.barrybecker4.game.common;
 
-import com.barrybecker4.game.common.board.Board;
 import com.barrybecker4.game.common.board.IBoard;
-import com.barrybecker4.game.common.board.IRectangularBoard;
 import com.barrybecker4.game.common.online.server.IServerConnection;
 import com.barrybecker4.game.common.persistence.GameExporter;
 import com.barrybecker4.game.common.player.PlayerAction;
@@ -17,11 +15,11 @@ import com.barrybecker4.game.common.player.PlayerList;
  *
  *  @author Barry Becker
  */
-public abstract class GameController
-           implements IGameController {
+public abstract class GameController<M extends Move, B extends IBoard<M>>
+           implements IGameController<M, B> {
 
     /** the board has the layout of the pieces. */
-    private IBoard board_;
+    private B board_;
 
     /** Use this to draw directly to the ui while thinking (for debugging purposes) . */
     protected GameViewModel viewer_;
@@ -61,16 +59,10 @@ public abstract class GameController
         getBoard().reset();
     }
 
-
-    @Override
-    public MoveList getMoveList() {
-        return ((Board)getBoard()).getMoveList();
-    }
-
     /**
      * @return the last move played.
      */
-    public Move getLastMove() {
+    public M getLastMove() {
         return getMoveList().getLastMove();
     }
 
@@ -79,7 +71,7 @@ public abstract class GameController
      */
     @Override
     public int getNumMoves() {
-        return ((Board)getBoard()).getMoveList().getNumMoves();
+        return getMoveList().getNumMoves();
     }
 
     /**
@@ -103,14 +95,14 @@ public abstract class GameController
      * @return the board representation object.
      */
     @Override
-    public final IBoard getBoard() {
+    public B getBoard() {
         if (board_ == null) {
             board_ = createBoard();
         }
         return board_;
     }
 
-    protected abstract IBoard createBoard();
+    protected abstract B createBoard();
 
     /**
      * Setup the initial game state.
@@ -119,8 +111,8 @@ public abstract class GameController
 
 
     @Override
-    public void makeMove(Move move) {
-        ((IRectangularBoard)getBoard()).makeMove(move);
+    public void makeMove(M move) {
+        getBoard().makeMove(move);
     }
 
     /**
@@ -128,8 +120,8 @@ public abstract class GameController
      * @return  the move which was undone (null returned if no prior move)
      */
     @Override
-    public Move undoLastMove() {
-        return ((IRectangularBoard)getBoard()).undoMove();
+    public M undoLastMove() {
+        return getBoard().undoMove();
     }
 
     /**

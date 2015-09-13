@@ -4,6 +4,7 @@ package com.barrybecker4.game.twoplayer.common.search.strategy;
 import com.barrybecker4.game.common.GameContext;
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
+import com.barrybecker4.game.twoplayer.common.TwoPlayerBoard;
 import com.barrybecker4.game.twoplayer.common.search.SearchWindow;
 import com.barrybecker4.game.twoplayer.common.search.Searchable;
 import com.barrybecker4.game.twoplayer.common.search.options.BruteSearchOptions;
@@ -20,7 +21,8 @@ import java.util.List;
  *
  *  @author Barry Becker
  */
-public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
+public abstract class AbstractBruteSearchStrategy<M extends TwoPlayerMove, B extends TwoPlayerBoard<M>>
+        extends AbstractSearchStrategy<M, B>
 {
     /** if true, then use alpha-beta pruning. */
     final boolean alphaBeta_;
@@ -47,7 +49,7 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * @param searchable the game controller that has options and can make/undo moves.
      * @param weights coefficients for the evaluation polynomial that indirectly determines the best move.
      */
-    AbstractBruteSearchStrategy( Searchable searchable, ParameterArray weights ) {
+    AbstractBruteSearchStrategy( Searchable<M, B> searchable, ParameterArray weights ) {
         super(searchable, weights);
         SearchOptions opts = getOptions();
         BruteSearchOptions bruteOpts = opts.getBruteSearchOptions();
@@ -64,16 +66,15 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
     }
 
     @Override
-    public TwoPlayerMove search(TwoPlayerMove lastMove, SearchTreeNode parent) {
+    public M search(M lastMove, SearchTreeNode parent) {
 
         SearchWindow window = getOptions().getBruteSearchOptions().getInitialSearchWindow();
-        return searchInternal( lastMove, lookAhead_, window,  parent );
+        return searchInternal(lastMove, lookAhead_, window,  parent);
     }
 
-    TwoPlayerMove searchInternal(TwoPlayerMove lastMove,
-                                int depth, SearchWindow window, SearchTreeNode parent) {
+    M searchInternal(M lastMove, int depth, SearchWindow window, SearchTreeNode parent) {
 
-        boolean done = searchable.done( lastMove, false);
+        boolean done = searchable.done(lastMove, false);
         if ( depth <= 0 || done ) {
             if (doQuiescentSearch(depth, done, lastMove)) {
                 return quiescentSearch(lastMove, depth, window, parent);
@@ -86,15 +87,15 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
         }
 
         // generate a list of all (or bestPercent) candidate next moves, and pick the best one
-        MoveList list = searchable.generateMoves(lastMove,  weights_);
+        MoveList<M> list = searchable.generateMoves(lastMove,  weights_);
 
         if (depth == lookAhead_)
             numTopLevelMoves_ = list.size();
 
         if (emptyMoveList(list, lastMove)) {
             updatePercentDone(depth, list);
-            // if there are no possible next moves, return null (we hit the end of the game).
-            return null;
+            // if there are no possible next moves, return the lastMove (we hit the end of the game).
+            return lastMove;
         }
 
         return findBestMove(lastMove, depth, list, window, parent);
@@ -105,9 +106,9 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * Get the next move and increment the number of moves considered.
      * @return next move in sorted generated next move list.
      */
-    protected TwoPlayerMove getNextMove(MoveList list) {
+    protected M getNextMove(MoveList<M> list) {
         movesConsidered++;
-        return (TwoPlayerMove)list.remove(0);
+        return list.remove(0);
     }
 
     /**
@@ -115,12 +116,10 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * and the last moved played created an urgent situation.
      * @return true of we should continue searching a bit to find a stable/quiescent move.
      */
-    protected boolean doQuiescentSearch(int depth, boolean done, TwoPlayerMove lastMove) {
+    protected boolean doQuiescentSearch(int depth, boolean done, M lastMove) {
+        if (!quiescence_) return false;
         boolean inJeopardy = searchable.inJeopardy(lastMove, weights_);
-        return quiescence_
-                 && depth > -maxQuiescentDepth_
-                 && !done
-                 && inJeopardy;
+        return depth > -maxQuiescentDepth_ && !done && inJeopardy;
     }
 
 
@@ -129,10 +128,9 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * For example, perhaps we are in the middle of a piece exchange (chess), or a large group is in atari (go).
      * @return best quiescent move
      */
-    TwoPlayerMove quiescentSearch(TwoPlayerMove lastMove,
-                                  int depth, SearchWindow window, SearchTreeNode parent) {
+    M quiescentSearch(M lastMove, int depth, SearchWindow window, SearchTreeNode parent) {
 
-        MoveList urgentMoves = searchable.generateUrgentMoves(lastMove, weights_);
+        MoveList<M> urgentMoves = searchable.generateUrgentMoves(lastMove, weights_);
         if (emptyMoveList(urgentMoves, lastMove)) return null;
 
         return findBestMove(lastMove, depth, urgentMoves, window, parent);
@@ -150,7 +148,7 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * @param parent for constructing a ui tree. If null no game tree is constructed.
      * @return the chosen move (ie the best move) (may be null if no next move).
      */
-    protected abstract TwoPlayerMove findBestMove(TwoPlayerMove lastMove, int depth, MoveList list,
+    protected abstract M findBestMove(M lastMove, int depth, MoveList<M> list,
                                                   SearchWindow window, SearchTreeNode parent);
 
 
@@ -161,7 +159,7 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * @param parent the tree node entry above the current position.
      * @param i th child.
      */
-    protected void showPrunedNodesInTree( MoveList list, SearchTreeNode parent,
+    protected void showPrunedNodesInTree( MoveList<M> list, SearchTreeNode parent,
                                           int i, int selectedValue, SearchWindow window) {
         if (hasGameTree()) {
             super.addPrunedNodesInTree(list, parent, i,
@@ -174,7 +172,7 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
      * add a move to the visual game tree (if parent not null).
      * @return the node added to the tree.
      */
-    protected SearchTreeNode addNodeToTree( SearchTreeNode parent, TwoPlayerMove theMove,
+    protected SearchTreeNode addNodeToTree( SearchTreeNode parent, M theMove,
                                             SearchWindow window ) {
         NodeAttributes attributes = null;
         if (hasGameTree()) {
@@ -192,14 +190,5 @@ public abstract class AbstractBruteSearchStrategy extends AbstractSearchStrategy
             percentDone = (numTopLevelMoves_  == 0) ? 100 :
                     100 * (numTopLevelMoves_ - remainingNextMoves.size()) / numTopLevelMoves_;
         }
-    }
-
-    protected String getIndent(int depth) {
-        String indent = "";
-        int numTabs = lookAhead_ - depth;
-        for (int i=0; i < numTabs; i++) {
-           indent += "   ";
-        }
-        return indent;
     }
 }

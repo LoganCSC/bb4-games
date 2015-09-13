@@ -2,7 +2,6 @@
 package com.barrybecker4.game.twoplayer.common.search.transposition;
 
 import com.barrybecker4.common.geometry.Location;
-import com.barrybecker4.game.common.Move;
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.common.board.GamePiece;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
@@ -95,10 +94,10 @@ public class HashUniquenessTest extends TestCase {
     private void playAllMoves(int depth) {
 
         boolean player1ToMove = depth % 2 == 0;
-        MoveList openMoves = findOpenMoves(player1ToMove);
+        MoveList<TwoPlayerMove> openMoves = findOpenMoves(player1ToMove);
 
-        for (Move m : openMoves) {
-            TwoPlayerMove move = (TwoPlayerMove) m;
+        for (TwoPlayerMove m : openMoves) {
+            TwoPlayerMove move =  m;
             board.makeMove(move);
 
             applyMoveToHash(move.getToLocation());
@@ -129,9 +128,9 @@ public class HashUniquenessTest extends TestCase {
         }
     }
 
-    private MoveList findOpenMoves(boolean player1) {
+    private MoveList<TwoPlayerMove> findOpenMoves(boolean player1) {
 
-        MoveList moves = new MoveList();
+        MoveList<TwoPlayerMove> moves = new MoveList<>();
         for (int i=1; i<=rowMax; i++) {
             for (int j=1; j<=colMax; j++) {
                 if (board.getPosition(i, j).isUnoccupied())  {
@@ -145,7 +144,7 @@ public class HashUniquenessTest extends TestCase {
     private int score(TicTacToeBoard b) {
 
         double score = 0;
-        boolean player1 = ((TwoPlayerMove)b.getMoveList().getLastMove()).isPlayer1();
+        boolean player1 = (b.getMoveList().getLastMove()).isPlayer1();
         for (int i=1; i<=rowMax; i++) {
             for (int j=1; j<=colMax; j++) {
                 if (board.getPosition(i, j).isOccupied())  {

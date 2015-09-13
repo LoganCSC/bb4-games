@@ -18,73 +18,67 @@ import com.barrybecker4.optimization.parameter.ParameterArray;
  *
  * @author Barry Becker
  */
-public class SearchableStub extends AbstractSearchable {
+public class SearchableStub extends AbstractSearchable<TwoPlayerMoveStub, TwoPlayerBoard<TwoPlayerMoveStub>> {
 
-    protected SearchStrategy strategy_;
-    private SearchOptions options_;
+    private SearchOptions<TwoPlayerMoveStub, TwoPlayerBoard<TwoPlayerMoveStub>> options_;
 
-    public SearchableStub(SearchOptions options) {
-        super(new MoveList());
+    public SearchableStub(SearchOptions<TwoPlayerMoveStub, TwoPlayerBoard<TwoPlayerMoveStub>> options) {
+        super(new MoveList<TwoPlayerMoveStub>());
         options_ = options;
     }
 
     /** Copy constructor */
     public SearchableStub(SearchableStub stub) {
         this(stub.getSearchOptions());
-        moveList_ = new MoveList(stub.getMoveList());
+        moveList_ = new MoveList<>(stub.getMoveList());
     }
 
     @Override
-    public SearchOptions getSearchOptions() {
+    public SearchOptions<TwoPlayerMoveStub, TwoPlayerBoard<TwoPlayerMoveStub>> getSearchOptions() {
        return options_;
     }
 
     /** @return a copy of this instnace */
     @Override
-    public Searchable copy() {
+    public Searchable<TwoPlayerMoveStub, TwoPlayerBoard<TwoPlayerMoveStub>> copy() {
         return new SearchableStub(this);
     }
 
     @Override
-    public void makeInternalMove( TwoPlayerMove m )  {
+    public void makeInternalMove( TwoPlayerMoveStub m )  {
         moveList_.add(m);
     }
 
     @Override
-    public void undoInternalMove( TwoPlayerMove m ) {
+    public void undoInternalMove( TwoPlayerMoveStub m ) {
         moveList_.removeLast();
     }
 
     @Override
-    public boolean done( TwoPlayerMove m, boolean recordWin ) {
+    public boolean done( TwoPlayerMoveStub m, boolean recordWin ) {
         return m.getInheritedValue() >= SearchStrategy.WINNING_VALUE;
     }
 
     @Override
-    public int worth(TwoPlayerMove lastMove, ParameterArray weights) {
+    public int worth(TwoPlayerMoveStub lastMove, ParameterArray weights) {
         return lastMove.getValue();
     }
 
-    /*
-    public int worth(Move lastMove, ParameterArray weights, boolean player1sPerspective) {
-        return lastMove.getValue();
-    } */
-
     @Override
-    public TwoPlayerBoard getBoard() {
+    public TwoPlayerBoard<TwoPlayerMoveStub> getBoard() {
         return null;
     }
 
     @Override
-    public MoveList generateMoves(TwoPlayerMove lastMove, ParameterArray weights) {
-        return new MoveList(((TwoPlayerMoveStub) lastMove).getChildren());
+    public MoveList<TwoPlayerMoveStub> generateMoves(TwoPlayerMoveStub lastMove, ParameterArray weights) {
+        return new MoveList<>(lastMove.getChildren());
     }
 
     @Override
-    public MoveList generateUrgentMoves(TwoPlayerMove lastMove, ParameterArray weights) {
-        MoveList urgentMoves = new MoveList();
-        for (Move m : ((TwoPlayerMoveStub) lastMove).getChildren()) {
-            TwoPlayerMove move = (TwoPlayerMove)m;
+    public MoveList<TwoPlayerMoveStub> generateUrgentMoves(TwoPlayerMoveStub lastMove, ParameterArray weights) {
+        MoveList<TwoPlayerMoveStub> urgentMoves = new MoveList<>();
+        for (Move m : lastMove.getChildren()) {
+            TwoPlayerMoveStub move = (TwoPlayerMoveStub)m;
             if (move.isUrgent())  {
                 urgentMoves.add(move);
             }
@@ -93,8 +87,8 @@ public class SearchableStub extends AbstractSearchable {
     }
 
     @Override
-    public boolean inJeopardy( TwoPlayerMove lastMove, ParameterArray weights) {
-        return ((TwoPlayerMoveStub)lastMove).causedUrgency();
+    public boolean inJeopardy( TwoPlayerMoveStub lastMove, ParameterArray weights) {
+        return lastMove.causedUrgency();
     }
 
     @Override
@@ -102,7 +96,7 @@ public class SearchableStub extends AbstractSearchable {
         HashKey key = new HashKey();
         for (Move m : moveList_) {
             //key += m.hashCode();
-            key.applyMove(((TwoPlayerMove)m).getToLocation(), m.hashCode());
+            key.applyMove(((TwoPlayerMoveStub)m).getToLocation(), m.hashCode());
         }
         return key;
     }

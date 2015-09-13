@@ -38,25 +38,24 @@ import java.util.List;
  *
  *  @author Barry Becker
  */
-public abstract class GameBoardViewer extends JPanel
-                                      implements GameViewModel, GameChangedListener {
+public abstract class GameBoardViewer<M extends Move, B extends Board<M>> extends JPanel
+                                      implements GameViewModel, GameChangedListener<M> {
 
     /** every GameBoardViewer must contain a controller. */
-    protected GameController controller_;
+    protected GameController<M, B> controller_;
 
     /** for restoring undone moves. */
-    protected final MoveList undoneMoves_ = new MoveList();
+    protected final MoveList<M> undoneMoves_ = new MoveList<>();
 
-    private ViewerMouseListener mouseListener_;
+    private ViewerMouseListener<M, B> mouseListener_;
 
     /** list of listeners for handling those events. */
-    private final List<GameChangedListener> gameListeners_ = new ArrayList<>();
+    private final List<GameChangedListener<M>> gameListeners_ = new ArrayList<>();
 
     protected final Cursor waitCursor_ = new Cursor( Cursor.WAIT_CURSOR );
     protected Cursor origCursor_ = null;
     protected JFrame parent_ = null;
     private File lastFileAccessed;
-
 
     /**
      * Construct the viewer.
@@ -77,20 +76,20 @@ public abstract class GameBoardViewer extends JPanel
         addGameChangedListener(this);
     }
 
-    protected ViewerMouseListener createViewerMouseListener() {
-        return new ViewerMouseListener(this);
+    protected ViewerMouseListener<M, B> createViewerMouseListener() {
+        return new ViewerMouseListener<>(this);
     }
 
     /**
      * @return the game specific controller for this viewer.
      */
-    protected abstract GameController createController();
+    protected abstract GameController<M, B> createController();
 
     /**
      * @return our game controller.
      */
     @Override
-    public GameController getController() {
+    public GameController<M, B> getController() {
        return controller_;
     }
 
@@ -168,7 +167,7 @@ public abstract class GameBoardViewer extends JPanel
     @Override
     public void reset() {
         controller_.reset();  //clear what's there and start over
-        Board board = (Board) controller_.getBoard();
+        B board = controller_.getBoard();
         commonReset(board);
     }
 
@@ -178,7 +177,7 @@ public abstract class GameBoardViewer extends JPanel
      */
     protected abstract GameBoardRenderer getBoardRenderer();
 
-    protected void commonReset(Board board) {
+    protected void commonReset(B board) {
         int nrows = board.getNumRows();
         int ncols = board.getNumCols();
 
@@ -211,7 +210,7 @@ public abstract class GameBoardViewer extends JPanel
      * Called when the game has changed in some way
      */
     @Override
-    public void gameChanged(GameChangedEvent evt) {
+    public void gameChanged(GameChangedEvent<M> evt) {
         GameContext.log(1, "game changed. refreshing viewer.");
         refresh();
     }
@@ -220,9 +219,9 @@ public abstract class GameBoardViewer extends JPanel
      * This method gets called when the game has changed in some way.
      * Most likely because a move has been played. It does not need to be on the eventDispatch thread.
      */
-    public void sendGameChangedEvent(Move m) {
-        GameChangedEvent gce = new GameChangedEvent( m, controller_, this );
-        for (GameChangedListener gcl : gameListeners_) {
+    public void sendGameChangedEvent(M m) {
+        GameChangedEvent<M> gce = new GameChangedEvent<>(m, controller_, this );
+        for (GameChangedListener<M> gcl : gameListeners_) {
             gcl.gameChanged(gce);
         }
     }
@@ -293,7 +292,7 @@ public abstract class GameBoardViewer extends JPanel
      * This is how the client can register itself to receive these events.
      * @param gcl the listener to add
      */
-    public void addGameChangedListener( GameChangedListener gcl ) {
+    public void addGameChangedListener( GameChangedListener<M> gcl ) {
         gameListeners_.add(gcl);
     }
 
@@ -301,6 +300,7 @@ public abstract class GameBoardViewer extends JPanel
      * This is how the client can unregister itself to receive these events.
      * @param gcl the listener  to remove
      */
+    @SuppressWarnings("unused")
     private void removeGameChangedListener( GameChangedListener gcl ) {
         gameListeners_.remove(gcl);
     }
@@ -338,12 +338,4 @@ public abstract class GameBoardViewer extends JPanel
         saveGame();
     }
 
-    /**
-     * do any needed cleanup.
-     */
-    public void dispose() {
-        removeMouseListener( mouseListener_ );
-        removeMouseMotionListener( mouseListener_);
-        removeGameChangedListener( this );
-    }
 }

@@ -254,7 +254,7 @@ public abstract class GameOptionsDialog extends OptionsDialog
 
         //call super methods to add color select entries
         boardColorButton_ = new JButton("...");
-        GameBoardViewer v = ((GameBoardViewer)controller_.getViewer());
+        GameBoardViewer v = (GameBoardViewer) controller_.getViewer();
         boardColorButton_.setBackground(v.getBackground());
         gridColorButton_ = new JButton("...");
         gridColorButton_.setBackground(v.getGridColor());
@@ -298,7 +298,7 @@ public abstract class GameOptionsDialog extends OptionsDialog
      }
 
     private JComboBox createLocaleCombo() {
-        JComboBox localeComboBox = new JComboBox();
+        JComboBox<String> localeComboBox = new JComboBox<>();
         localeComboBox.setToolTipText( GameContext.getLabel("LOCALE_TIP") );
 
         // add the available locales to the dropdown

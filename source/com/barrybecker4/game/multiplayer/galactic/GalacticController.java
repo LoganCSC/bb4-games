@@ -47,7 +47,7 @@ import java.util.List;
  *
  * @author Barry Becker
  */
-public class GalacticController extends MultiGameController {
+public class GalacticController extends MultiGameController<GalacticTurn, Galaxy> {
 
     private static final int DEFAULT_NUM_ROWS = 16;
     private static final int DEFAULT_NUM_COLS = 16;
@@ -91,7 +91,7 @@ public class GalacticController extends MultiGameController {
         }
         currentPlayerIndex_ = 0;
 
-        ((Galaxy)getBoard()).initPlanets(getPlayers(), (GalacticOptions)getOptions());
+        getBoard().initPlanets(getPlayers(), (GalacticOptions) getOptions());
     }
 
     /**
@@ -106,16 +106,19 @@ public class GalacticController extends MultiGameController {
     @Override
     public boolean isOnlinePlayAvailable() {return false; }
 
+
     /**
      * @return true if the game is over.
      */
     @Override
     public boolean isDone() {
-        if (getLastMove()==null) {
+        if (getLastMove() == null) {
             return false;
         }
         // add one so indexed by 1 instead of 0, add 1 because its the "last" move
-        if ((this.getNumMoves() + 2) >= ((GalacticOptions)getOptions()).getMaxYearsToPlay()) {
+        int numMoves =  getNumMoves();
+        System.out.println("num moves = "+ numMoves);
+        if ((numMoves + 2) >= ((GalacticOptions)getOptions()).getMaxYearsToPlay()) {
             return true; // done
         }
         return Galaxy.allPlanetsOwnedByOnePlayer();
@@ -127,7 +130,6 @@ public class GalacticController extends MultiGameController {
     @Override
     public List<? extends MultiGamePlayer> determineWinners() {
 
-        GalacticPlayer winner;
         double maxCriteria = -1.0;
         Scorer scorer = new Scorer();
 
@@ -140,7 +142,7 @@ public class GalacticController extends MultiGameController {
             }
         }
         // then find all players with the highest score
-        List<GalacticPlayer> winners = new ArrayList<GalacticPlayer>();
+        List<GalacticPlayer> winners = new ArrayList<>();
         for (Player p : getPlayers()) {
             GalacticPlayer player = (GalacticPlayer) p;
             double criteria = scorer.score(player);
@@ -170,9 +172,9 @@ public class GalacticController extends MultiGameController {
             // @@ I would really like to
             // Precalculate the battle sequence on the server and store it in the move, then send
             // the result in the move to the client.
-            // however, there are problems with that, so I just calculate it in the veiwer for now.
+            // however, there are problems with that, so I just calculate it in the viewer for now.
 
-            GalacticTurn gmove = gviewer.createMove(getLastMove());
+            GalacticTurn gmove = gviewer.createMove(null); //getLastMove());
             //gviewer.showMove(gmove);
 
             // records the result on the board.
@@ -193,7 +195,7 @@ public class GalacticController extends MultiGameController {
      */
     @Override
     protected int advanceToNextPlayerIndex() {
-        currentPlayerIndex_ = (currentPlayerIndex_+1) % getPlayers().size();
+        currentPlayerIndex_ = (currentPlayerIndex_ + 1) % getPlayers().size();
         return currentPlayerIndex_;
     }
 

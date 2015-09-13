@@ -2,8 +2,6 @@
 package com.barrybecker4.game.twoplayer.common.ui;
 
 import com.barrybecker4.game.common.GameContext;
-import com.barrybecker4.game.common.Move;
-import com.barrybecker4.game.common.board.Board;
 import com.barrybecker4.game.common.player.PlayerList;
 import com.barrybecker4.game.common.ui.ComputerMoveProgressBar;
 import com.barrybecker4.game.common.ui.panel.GameChangedEvent;
@@ -11,6 +9,7 @@ import com.barrybecker4.game.common.ui.panel.GameChangedListener;
 import com.barrybecker4.game.common.ui.viewer.GameBoardViewer;
 import com.barrybecker4.game.common.ui.viewer.GamePieceRenderer;
 import com.barrybecker4.game.twoplayer.common.ComputerMoveRequester;
+import com.barrybecker4.game.twoplayer.common.TwoPlayerBoard;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerController;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerViewModel;
@@ -50,8 +49,9 @@ import java.util.List;
  *
  *  @author Barry Becker
  */
-public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
-                                                   implements GameChangedListener, TwoPlayerViewModel {
+public abstract class AbstractTwoPlayerBoardViewer<M extends TwoPlayerMove, B extends TwoPlayerBoard<M>>
+        extends GameBoardViewer<M, B>
+        implements GameChangedListener<M>, TwoPlayerViewModel<M, B> {
 
     /** Responsible for showing move progress visually (with a progress bar). */
     private ComputerMoveRequester moveRequester_;
@@ -62,10 +62,10 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * Show this cached board if we are in the middle of processing the next one
      * (to avoid concurrency problems)
      */
-    private Board cachedGameBoard_ = null;
+    private B cachedGameBoard_ = null;
 
     /** we occasionally want to show the computer's considered next moves in the ui. */
-    private TwoPlayerMove[] nextMoves_;
+    private M[] nextMoves_;
 
     /** playback a sequence of moves  */
     private MoveSequencePlayback moveSequencePlayer_;
@@ -83,8 +83,8 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
     /**
      * @return our game controller
      */
-    public TwoPlayerController get2PlayerController() {
-       return (TwoPlayerController)controller_;
+    public TwoPlayerController<M, B> get2PlayerController() {
+       return (TwoPlayerController<M, B>)controller_;
     }
 
     /**
@@ -95,11 +95,11 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
         this.progressBar = progressBar;
     }
 
-    public TwoPlayerMove[] getNextMoves() {
+    public M[] getNextMoves() {
         return nextMoves_;
     }
 
-    void setNextMoves(TwoPlayerMove[] nextMoves) {
+    void setNextMoves(M[] nextMoves) {
         nextMoves_ = nextMoves;
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
     @Override
     public void reset() {
         controller_.reset();  //clear what's there and start over
-        Board board = getBoard();
+        B board = getBoard();
         commonReset(board);
     }
 
@@ -138,7 +138,7 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
     @Override
     public void startNewGame() {
         reset();
-        TwoPlayerController controller = get2PlayerController();
+        TwoPlayerController<M, B> controller = get2PlayerController();
         if (get2PlayerController().getOptions().isAutoOptimize())  {
             runOptimization();
         }
@@ -160,9 +160,9 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * @param move the move to make.
      * @return true if the game is over now.
      */
-    private boolean manMoves( TwoPlayerMove move) {
+    private boolean manMoves(M move) {
 
-        TwoPlayerController c = get2PlayerController();
+        TwoPlayerController<M, B> c = get2PlayerController();
         if ( GameContext.getUseSound() ) {
             GameContext.getMusicMaker().playNote( c.getOptions().getPreferredTone(), 45, 0, 200, 1000 );
         }
@@ -177,7 +177,9 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
 
         // Second arg was true, but then we did final update twice.
         boolean done = c.getSearchable().done(move, false);
-        sendGameChangedEvent(move);
+        if (done) {
+            sendGameChangedEvent(move);
+        }
         return done;
     }
 
@@ -262,7 +264,7 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * @param m the move that was selected by the computer.
      */
     @Override
-    public void computerMoved(final Move m) {
+    public void computerMoved(M m) {
 
         final Runnable postMoveCleanup = new PostMoveCleanup(m);
         SwingUtilities.invokeLater(postMoveCleanup);
@@ -274,29 +276,29 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * @param evt change event
      */
     @Override
-    public void gameChanged(GameChangedEvent evt) {
-        TwoPlayerController c = get2PlayerController();
+    public void gameChanged(GameChangedEvent<M> evt) {
+        TwoPlayerController<M, B> c = get2PlayerController();
         assert c == evt.getController();
 
         // note: we don't show the winner dialog if we are having the computer play against itself.
-        if (c.getSearchable().done((TwoPlayerMove)evt.getMove(), true)
+        if (c.getSearchable().done(evt.getMove(), true)
                 && c.getOptions().getShowGameOverDialog()) {
             showWinnerDialog();
             //c.reset();
         }
         else {
             if (get2PlayerController().getPlayers().allPlayersComputer() && evt.getMove() != null) {
-                continuePlay((TwoPlayerMove)evt.getMove());
+                continuePlay(evt.getMove());
             }
         }
     }
 
     /**
-     * let the computer go next if one of the players is a computer.
+     * Let the computer go next if one of the players is a computer.
      * @param move the current move (it must not be null)
      * @return false if the game is at an end, otherwise return true
      */
-     public final boolean continuePlay( TwoPlayerMove move ) {
+     public final boolean continuePlay( M move ) {
          boolean done;
          TwoPlayerController controller = get2PlayerController();
          if (controller.getPlayers().allPlayersComputer()) {
@@ -307,16 +309,17 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
              if ( controller.isPlayer1sTurn() ) {
                  assert !controller.isProcessing();
                  done = manMoves( move );
-                 if ( !controller.getPlayers().getPlayer2().isHuman() && !done )  {
+                 if (!controller.isPlayer1sTurn() && !controller.getPlayers().getPlayer2().isHuman() && !done )  {
                      done = doComputerMove( false );
                  }
              }
              else { // player 2s turn
                  done = manMoves( move );
-                 if ( !controller.getPlayers().getPlayer1().isHuman() && !done )  {
+                 if (controller.isPlayer1sTurn() && !controller.getPlayers().getPlayer1().isHuman() && !done )  {
                      done = doComputerMove( true );
                  }
              }
+             refresh();
          }
          return !done;
      }
@@ -341,11 +344,11 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * return the game to its state before the last human move.
      */
     public void undoLastManMove()  {
-        TwoPlayerController c = get2PlayerController();
+        TwoPlayerController<M, B> c = get2PlayerController();
         PlayerList players = c.getPlayers();
         if ( players.allPlayersComputer() )
             return;
-        Move move = c.undoLastMove();
+        M move = c.undoLastMove();
         if ( move != null ) {
             undoneMoves_.add( move );
             if ( !players.allPlayersHuman() ) {
@@ -364,7 +367,7 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * redo the last human player's move.
      */
     public void redoLastManMove()  {
-        TwoPlayerController c = get2PlayerController();
+        TwoPlayerController<M, B> c = get2PlayerController();
         PlayerList players = c.getPlayers();
         if ( undoneMoves_.isEmpty() ) {
             JOptionPane.showMessageDialog( null,
@@ -383,16 +386,16 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
     }
 
 
-    public final synchronized void showMoveSequence( List moveSequence ) {
+    public final synchronized void showMoveSequence( List<M> moveSequence ) {
         showMoveSequence( moveSequence, getController().getNumMoves() );
     }
 
-    final synchronized void showMoveSequence( List moveSequence, int numMovesToBackup) {
+    final synchronized void showMoveSequence( List<M> moveSequence, int numMovesToBackup) {
         showMoveSequence(moveSequence, numMovesToBackup, null);
     }
 
-    public final synchronized void showMoveSequence( List moveSequence, int numMovesToBackup,
-                                                     TwoPlayerMove[] nextMoves) {
+    public final synchronized void showMoveSequence( List<M> moveSequence, int numMovesToBackup,
+                                                     M[] nextMoves) {
         moveSequencePlayer_.makeMoveSequence( moveSequence, numMovesToBackup);
         setNextMoves(nextMoves);
         refresh();
@@ -410,24 +413,24 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
      * @return the cached game board if we are in the middle of processing.
      */
     @Override
-    public Board getBoard() {
-       TwoPlayerController c = get2PlayerController();
+    public B getBoard() {
+       TwoPlayerController<M, B> c = get2PlayerController();
 
        if (cachedGameBoard_ == null) {
-           cachedGameBoard_ = (Board)c.getBoard().copy();
+           cachedGameBoard_ = (B)c.getBoard().copy();
        }
        if (c.isProcessing() && !c.getOptions().isAutoOptimize()) {
            return cachedGameBoard_;
        }
        else {
-           return (Board)c.getBoard();
+           return c.getBoard();
        }
     }
 
     private class PostMoveCleanup implements Runnable {
-        private final Move lastMove;
+        private final M lastMove;
 
-        public PostMoveCleanup(Move lastMove) {
+        public PostMoveCleanup(M lastMove) {
             this.lastMove = lastMove;
         }
 
@@ -443,11 +446,12 @@ public abstract class AbstractTwoPlayerBoardViewer extends GameBoardViewer
             if (!get2PlayerController().getOptions().isAutoOptimize()) {
                 // show a pop-up for certain exceptional cases.
                 // For example, in chess we warn on a checking move.
-                warnOnSpecialMoves((TwoPlayerMove) lastMove);
+                warnOnSpecialMoves(lastMove);
                 sendGameChangedEvent(lastMove);
             }
-            if (progressBar != null)
+            if (progressBar != null) {
                 progressBar.cleanup();
+            }
        }
     }
 }

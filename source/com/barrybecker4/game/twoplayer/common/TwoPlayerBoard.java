@@ -2,10 +2,10 @@
 package com.barrybecker4.game.twoplayer.common;
 
 import com.barrybecker4.game.common.GameContext;
-import com.barrybecker4.game.common.Move;
 import com.barrybecker4.game.common.board.Board;
 import com.barrybecker4.game.common.board.BoardPosition;
 import com.barrybecker4.game.common.board.GamePiece;
+import com.barrybecker4.game.common.board.IBoard;
 
 import java.util.List;
 
@@ -15,17 +15,17 @@ import java.util.List;
  *
  * @author Barry Becker
  */
-public abstract class TwoPlayerBoard extends Board {
+public abstract class TwoPlayerBoard<M extends TwoPlayerMove> extends Board<M> {
 
     /** default constructor */
     public TwoPlayerBoard() {}
 
     /** copy constructor */
-    public TwoPlayerBoard(TwoPlayerBoard board) {
+    public TwoPlayerBoard(TwoPlayerBoard<M> board) {
         super(board);
     }
 
-    public abstract TwoPlayerBoard copy();
+    public abstract TwoPlayerBoard<M> copy();
 
     /**
      * given a move specification, execute it on the board
@@ -34,16 +34,14 @@ public abstract class TwoPlayerBoard extends Board {
      * @return false if the move is illegal.
      */
     @Override
-    protected boolean makeInternalMove( Move move ) {
+    protected boolean makeInternalMove( M move ) {
 
-        TwoPlayerMove m = (TwoPlayerMove)move;
-        if ( !m.isPassOrResignation() ) {
-            BoardPosition pos = getPosition(m.getToLocation());
-            assert(m.getPiece() != null) : "move's piece was null :" + m;
-            pos.setPiece(m.getPiece());
+        if ( !move.isPassOrResignation() ) {
+            BoardPosition pos = getPosition(move.getToLocation());
+            assert(move.getPiece() != null) : "move's piece was null :" + move;
+            pos.setPiece(move.getPiece());
             GamePiece piece = pos.getPiece();
-            assert (piece != null):
-                    "The piece was " + piece + ". Moved to " + m.getToRow() + ", " + m.getToCol();
+
             if ( GameContext.getDebugMode() > 0 ) {
                 piece.setAnnotation( Integer.toString(getMoveList().getNumMoves()) );
             }
@@ -54,8 +52,8 @@ public abstract class TwoPlayerBoard extends Board {
     /**
      * @param moves list of moves to make all at once.
      */
-    protected void makeMoves(List<Move> moves) {
-        for (Move move : moves) {
+    protected void makeMoves(List<M> moves) {
+        for (M move : moves) {
             makeMove(move);
         }
     }
@@ -86,14 +84,14 @@ public abstract class TwoPlayerBoard extends Board {
         bldr.append("\n");
         int nRows = getNumRows();
         int nCols = getNumCols();
-        TwoPlayerMove lastMove = (TwoPlayerMove) getMoveList().getLastMove();
+        TwoPlayerMove lastMove = getMoveList().getLastMove();
 
         for ( int i = 1; i <= nRows; i++ )   {
             boolean followingLastMove = false;
             for ( int j = 1; j <= nCols; j++ ) {
                 BoardPosition pos = this.getPosition(i,j);
                 if (pos.isOccupied()) {
-                    if (pos.getLocation().equals(lastMove.getToLocation())) {
+                    if (lastMove != null && pos.getLocation().equals(lastMove.getToLocation())) {
                         bldr.append("[").append(pos.getPiece()).append("]");
                         followingLastMove = true;
                     }

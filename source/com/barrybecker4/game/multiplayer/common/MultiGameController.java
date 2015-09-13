@@ -6,6 +6,7 @@ import com.barrybecker4.game.common.GameController;
 import com.barrybecker4.game.common.GameOptions;
 import com.barrybecker4.game.common.Move;
 import com.barrybecker4.game.common.MoveList;
+import com.barrybecker4.game.common.board.Board;
 import com.barrybecker4.game.common.board.IBoard;
 import com.barrybecker4.game.common.online.server.IServerConnection;
 import com.barrybecker4.game.common.online.server.connection.ServerConnection;
@@ -43,7 +44,7 @@ import java.util.List;
  *  </ul>
  * @author Barry Becker
  */
-public abstract class MultiGameController extends GameController {
+public abstract class MultiGameController<M extends Move, B extends IBoard<M>> extends GameController<M, B> {
 
     protected int currentPlayerIndex_;
 
@@ -72,11 +73,17 @@ public abstract class MultiGameController extends GameController {
     }
 
     @Override
-    protected IBoard createBoard() {
+    protected B createBoard() {
         return createTable(size.width, size.height);
     }
 
-    protected abstract IBoard createTable(int nrows, int ncols);
+    protected abstract B createTable(int nrows, int ncols);
+
+    @Override
+    public MoveList<M> getMoveList() {
+        //throw new UnsupportedOperationException("no move list for multi player games");
+        return ((Board)getBoard()).getMoveList();
+    }
 
     /**
      * Return the game board back to its initial opening state
@@ -92,7 +99,7 @@ public abstract class MultiGameController extends GameController {
         startingPlayerIndex_ = 0;
         playIndex_ = 0;
         currentPlayerIndex_ = 0;
-        recentRobotActions_ = new ArrayList<PlayerAction>();
+        recentRobotActions_ = new ArrayList<>();
         initPlayers();
     }
 
@@ -203,7 +210,7 @@ public abstract class MultiGameController extends GameController {
 
     /** get all the actions since last asked and clear them out */
     public List<PlayerAction> getRecentRobotActions() {
-        List<PlayerAction> actions = new ArrayList<PlayerAction>();
+        List<PlayerAction> actions = new ArrayList<>();
         GameContext.log(0, "There were " + recentRobotActions_.size() +"recent robot actions.");
         actions.addAll(recentRobotActions_);
         recentRobotActions_.clear();
@@ -230,7 +237,7 @@ public abstract class MultiGameController extends GameController {
      *  @return the lastMoves value modified by the value add of the new move.
      *   a large positive value means that the move is good from the specified players viewpoint
      */
-    protected double worth( Move lastMove, ParameterArray weights ) {
+    protected double worth( M lastMove, ParameterArray weights ) {
         return lastMove.getValue();
     }
 
@@ -238,14 +245,14 @@ public abstract class MultiGameController extends GameController {
      * generate all possible next moves.
      * impossible for this game.
      */
-    public MoveList generateMoves( Move lastMove, ParameterArray weights) {
+    public MoveList generateMoves( M lastMove, ParameterArray weights) {
         return new MoveList();
     }
 
     /**
      * return any moves that result in a win
      */
-    public List generateUrgentMoves( Move lastMove, ParameterArray weights) {
+    public List generateUrgentMoves( M lastMove, ParameterArray weights) {
         return null;
     }
 }

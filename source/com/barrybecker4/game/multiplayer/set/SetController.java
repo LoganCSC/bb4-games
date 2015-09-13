@@ -9,6 +9,7 @@ import com.barrybecker4.game.multiplayer.common.MultiGameController;
 import com.barrybecker4.game.multiplayer.common.MultiGamePlayer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,9 +24,6 @@ import java.util.List;
  */
 public class SetController extends MultiGameController {
 
-    /** represents the deck and cards shown on the board  */
-    private SetBoard board_;
-
     private static final int NO_PLAYER_SELECTED = -1;
 
     /** currently selected player. -1 if none selected        */
@@ -37,6 +35,14 @@ public class SetController extends MultiGameController {
      */
     public SetController() {
         initializeData();
+    }
+
+    /**
+     * @return the board representation object.
+     */
+    @Override
+    public SetBoard getBoard() {
+        return (SetBoard)super.getBoard();
     }
 
     @Override
@@ -54,7 +60,6 @@ public class SetController extends MultiGameController {
 
     @Override
     protected void initializeData() {
-        board_ = (SetBoard) getBoard(); //createTable(0, 0);
         initPlayers();
         gameChanged();
     }
@@ -82,7 +87,7 @@ public class SetController extends MultiGameController {
      * @param num  the number of cards to turn face up on the board.
      */
     public void addCards(int num) {
-        board_.addCards(num);
+        getBoard().addCards(num);
         gameChanged();
     }
 
@@ -90,7 +95,7 @@ public class SetController extends MultiGameController {
      * remove a card from the board and put it back in the deck.
      */
     public void removeCard() {
-        board_.removeCard();
+        getBoard().removeCard();
         gameChanged();
     }
 
@@ -98,14 +103,14 @@ public class SetController extends MultiGameController {
      * @return true if legal to remove more cards from the board.
      */
     public boolean canRemoveCards() {
-        return board_.canRemoveCards();
+        return getBoard().canRemoveCards();
     }
 
     /**
      * @return true if not showing cards remain in deck, or we have not yet reached MAX_CARDS_BEFORE_SET visible cards.
      */
     public boolean hasCardsToAdd() {
-        return board_.hasCardsToAdd();
+        return getBoard().hasCardsToAdd();
     }
 
 
@@ -113,7 +118,7 @@ public class SetController extends MultiGameController {
      * @param cards to remove (usually a set that has been discovered by a player)
      */
     public void removeCards(List<Card> cards) {
-        board_.removeCards(cards);
+        getBoard().removeCards(cards);
         gameChanged();
     }
 
@@ -131,7 +136,7 @@ public class SetController extends MultiGameController {
     }
 
     public List<Card> getSetsOnBoard()  {
-       return board_.getSetsOnBoard();
+       return getBoard().getSetsOnBoard();
     }
 
      /**
@@ -177,7 +182,7 @@ public class SetController extends MultiGameController {
      */
     @Override
     public boolean isDone() {
-        return board_.isDone();
+        return getBoard().isDone();
     }
 
     /**
@@ -201,6 +206,6 @@ public class SetController extends MultiGameController {
             }
         }
 
-        return Arrays.asList(winner);
+        return Collections.singletonList(winner);
     }
 }

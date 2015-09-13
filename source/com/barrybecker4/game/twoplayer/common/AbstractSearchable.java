@@ -17,22 +17,23 @@ import com.barrybecker4.optimization.parameter.ParameterArray;
  *
  * @author Barry Becker
  */
-public abstract class AbstractSearchable implements Searchable {
+public abstract class AbstractSearchable<M extends TwoPlayerMove, B extends TwoPlayerBoard<M>>
+        implements Searchable<M, B> {
 
-    protected MoveList moveList_;
-    protected SearchStrategy strategy_;
+    protected MoveList<M> moveList_;
+    protected SearchStrategy<M> strategy_;
 
     /**
      * Constructor.
      * @param moveList list of moves that have been made so far.
      */
-    public AbstractSearchable(MoveList moveList) {
+    public AbstractSearchable(MoveList<M> moveList) {
 
         moveList_ = moveList;
     }
 
-    public TwoPlayerMove searchForNextMove(ParameterArray weights, TwoPlayerMove lastMove,
-                                           IGameTreeViewable treeViewer) {
+    public M searchForNextMove(ParameterArray weights, M lastMove,
+                               IGameTreeViewable treeViewer) {
         getProfiler().startProfiling();
 
         strategy_ = getSearchOptions().getSearchStrategy(this, weights);
@@ -43,12 +44,12 @@ public abstract class AbstractSearchable implements Searchable {
             root = treeViewer.getRootNode();
         }
 
-        TwoPlayerMove nextMove = strategy_.search( lastMove, root );
+        M nextMove = strategy_.search( lastMove, root );
         getProfiler().stopProfiling(strategy_.getNumMovesConsidered());
         return nextMove;
     }
 
-    public SearchStrategy getSearchStrategy() {
+    public SearchStrategy<M> getSearchStrategy() {
         return strategy_;
     }
 
@@ -56,12 +57,12 @@ public abstract class AbstractSearchable implements Searchable {
         return moveList_.getNumMoves();
     }
 
-    public MoveList getMoveList() {
+    public MoveList<M> getMoveList() {
         return moveList_;
     }
 
     /** @return the search options to use */
-    public abstract SearchOptions getSearchOptions();
+    public abstract SearchOptions<M, B> getSearchOptions();
 
     protected AbstractGameProfiler getProfiler() {
         return GameProfiler.getInstance();

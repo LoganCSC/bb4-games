@@ -2,7 +2,6 @@
 package com.barrybecker4.game.twoplayer.common.search;
 
 import com.barrybecker4.common.geometry.Location;
-import com.barrybecker4.game.common.Move;
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.common.board.GamePiece;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
@@ -19,45 +18,55 @@ public class TwoPlayerMoveStub extends TwoPlayerMove {
     public static final String ROOT_ID = "root";
 
     /** child moves */
-    private MoveList children_;
+    private MoveList<TwoPlayerMoveStub> children_;
 
     /** every move but the root of the tree has a parent_ */
     private TwoPlayerMoveStub parent_;
 
-    private boolean causedUrgency;
+    private boolean causesUrgency;
 
 
     public TwoPlayerMoveStub(int val, boolean isPlayer1, Location toLocation, TwoPlayerMoveStub parent) {
         super(toLocation, val, new GamePiece(isPlayer1));
         this.parent_ = parent;
-        this.children_ = new MoveList();
+        if (this.parent_ != null)  {
+            this.parent_.addChild(this);
+        }
+        this.children_ = new MoveList<>();
+    }
+
+    public TwoPlayerMoveStub(int val, boolean isPlayer1, Location toLocation, boolean
+            isUrgent, boolean causesUrgency, TwoPlayerMoveStub parent) {
+        this(val, isPlayer1, toLocation, parent);
+        this.setUrgent(isUrgent);
+        this.setCausesUrgency(causesUrgency);
     }
 
     public TwoPlayerMoveStub getParent() {
         return parent_;
     }
 
-    public void setChildren(MoveList children) {
-        children_.clear();
-        children_.addAll(children);
+    private void addChild(TwoPlayerMoveStub move) {
+        this.children_.add(move);
     }
 
-    public MoveList getChildren() {
+    public MoveList<TwoPlayerMoveStub> getChildren() {
         return children_;
     }
 
-    public void setCausedUrgency(boolean value) {
-        causedUrgency = value;
+    public void setCausesUrgency(boolean value) {
+        causesUrgency = value;
     }
 
     public boolean causedUrgency() {
-        return causedUrgency;
+        return causesUrgency;
     }
 
     /**
-     *
      * Unique move id that defines where in the game tree this move resides.
      * Something we can match against when testing.
+     * Each character in the id is a digit that corresponds to traveling a path
+     * from the nth child from root to this node.
      *
      * @return unique id for move in tree
      */
@@ -71,9 +80,10 @@ public class TwoPlayerMoveStub extends TwoPlayerMove {
         String id = "";
         while (parentMove != null) {
             int index = parentMove.getChildren().indexOf(current);
-            if (index < 0)
-                System.out.println(getValue() + " not found among " + getParent().getChildren().size() + " parent children of " + getParent());
-            id += Integer.toString(index);
+            assert (index >= 0) :
+                getValue() + " not found among " + getParent().getChildren().size()
+                        + " parent children of " + getParent();
+            id = Integer.toString(index) + id;
             current = parentMove;
             parentMove = parentMove.getParent();
         }
@@ -86,19 +96,16 @@ public class TwoPlayerMoveStub extends TwoPlayerMove {
 
     private void print(String indent, TwoPlayerMoveStub subtreeRoot)  {
 
-        MoveList childList = subtreeRoot.getChildren();
+        MoveList<TwoPlayerMoveStub> childList = subtreeRoot.getChildren();
         System.out.println(indent + subtreeRoot);
-        for (Move move : childList) {
+        for (TwoPlayerMove move : childList) {
             print("  " + indent, (TwoPlayerMoveStub)move);
         }
     }
 
-
     public String toString() {
-        StringBuilder bldr = new StringBuilder();
-        bldr.append("id:").append(getId()).append(" value:").append(getValue());
-        bldr.append(" inh val:").append(getInheritedValue());
-        bldr.append(isUrgent()?" urgent":" ").append(causedUrgency()?"jeopardy":"");
-        return bldr.toString();
+        return "id:" + getId() + " value:" + getValue()
+                + " inh val:" + getInheritedValue() + (isUrgent() ? " urgent" : " ")
+                + (causedUrgency() ? "jeopardy" : "");
     }
 }

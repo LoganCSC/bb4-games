@@ -2,10 +2,9 @@
 package com.barrybecker4.game.twoplayer.common.search.strategy;
 
 import com.barrybecker4.common.format.FormatUtil;
-import com.barrybecker4.game.common.Move;
 import com.barrybecker4.game.common.MoveList;
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
-import com.barrybecker4.game.twoplayer.common.WinProbabilityCaclulator;
+import com.barrybecker4.game.twoplayer.common.WinProbabilityCalculator;
 import com.barrybecker4.game.twoplayer.common.search.options.MonteCarloSearchOptions;
 import com.barrybecker4.game.twoplayer.common.search.tree.NodeAttributes;
 
@@ -18,19 +17,19 @@ import java.util.List;
  *
  * @author Barry Becker
  */
-public class UctNode {
+public class UctNode<M extends TwoPlayerMove> {
 
     /** The number of times we have visited this node in the tree. */
     private int numVisits;
 
     /** The move this node represents. */
-    public TwoPlayerMove move;
+    public M move;
 
     /** The number of times we have won a random game that starts from this node. */
     private float numWins;
 
     /** List of child nodes (moves)  */
-    private List<UctNode> children;
+    private List<UctNode<M>> children;
 
     /**
      * not sure what this is for. See http://senseis.xmp.net/?UCT. Make a param.
@@ -45,7 +44,7 @@ public class UctNode {
      * Constructor.
      * @param move the move we represent
      */
-    public UctNode(TwoPlayerMove move) {
+    public UctNode(M move) {
         this.move = move;
     }
 
@@ -74,11 +73,11 @@ public class UctNode {
      */
     public float getWinRate() {
         return (numVisits == 0) ?
-            WinProbabilityCaclulator.getChanceOfPlayer1Winning(move.getValue()) :
+            WinProbabilityCalculator.getChanceOfPlayer1Winning(move.getValue()) :
             numWins / (float)numVisits;
     }
 
-    public List<UctNode> getChildren() {
+    public List<UctNode<M>> getChildren() {
         return children;
     }
 
@@ -104,11 +103,11 @@ public class UctNode {
      * @param moves child moves to add.
      * @return the number of children added
      */
-    public int addChildren(MoveList moves) {
+    public int addChildren(MoveList<M> moves) {
         int numKids = 0;
-        children = new LinkedList<UctNode>();
-        for (Move m : moves) {
-            UctNode newNode = new UctNode((TwoPlayerMove) m);
+        children = new LinkedList<>();
+        for (M m : moves) {
+            UctNode<M> newNode = new UctNode<>(m);
             children.add(newNode);
             numKids++;
         }
@@ -134,10 +133,10 @@ public class UctNode {
      * }
      * @return the bestNode to the child with the highest winrate   (or maybe numvisits - make option?)
      */
-    public TwoPlayerMove findBestChildMove(MonteCarloSearchOptions.MaximizationStyle style) {
-        UctNode bestNode = null;
+    public M findBestChildMove(MonteCarloSearchOptions.MaximizationStyle style) {
+        UctNode<M> bestNode = null;
         if (hasChildren())  {
-            for (UctNode child : children) {
+            for (UctNode<M> child : children) {
                 switch (style) {
                     case WIN_RATE:
                         if (bestNode == null || child.getWinRate() > bestNode.getWinRate()) {
@@ -200,16 +199,16 @@ public class UctNode {
         return move.toString() + " " + getAttributes().toString();
     }
 
-    /** print the tree rooted at this node */
+    /** print the tree rooted at this node *
     public void printTree() {
         System.out.println("ROOT -------------------");
         printTree("", this.numVisits);
-    }
+    }     */
 
     /**
      * print the tree rooted at this node.
      * @param indent amount to indent
-     */
+     *
     private void printTree(String indent, int parentVisits) {
         System.out.println(indent + this.toString()
                 + " uct=" + FormatUtil.formatNumber(this.calculateUctValue(1.0, parentVisits)));
@@ -218,5 +217,5 @@ public class UctNode {
                 child.printTree(indent + "  ", this.numVisits);
             }
         }
-    }
+    }  */
 }

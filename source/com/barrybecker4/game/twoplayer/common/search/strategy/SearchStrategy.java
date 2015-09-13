@@ -1,7 +1,8 @@
-/** Copyright by Barry G. Becker, 2000-2011. Licensed under MIT License: http://www.opensource.org/licenses/MIT  */
+/** Copyright by Barry G. Becker, 2000-2015. Licensed under MIT License: http://www.opensource.org/licenses/MIT  */
 package com.barrybecker4.game.twoplayer.common.search.strategy;
 
 import com.barrybecker4.game.twoplayer.common.TwoPlayerMove;
+import com.barrybecker4.game.twoplayer.common.TwoPlayerBoard;
 import com.barrybecker4.game.twoplayer.common.search.options.SearchOptions;
 import com.barrybecker4.game.twoplayer.common.search.tree.IGameTreeViewable;
 import com.barrybecker4.game.twoplayer.common.search.tree.SearchTreeNode;
@@ -11,7 +12,7 @@ import com.barrybecker4.game.twoplayer.common.search.tree.SearchTreeNode;
  *
  * @author Barry Becker
  */
-public interface SearchStrategy extends SearchProgress {
+public interface SearchStrategy<M extends TwoPlayerMove> extends SearchProgress {
 
     /** anything greater than this is considered a won game. */
     int WINNING_VALUE = 4096;
@@ -29,7 +30,7 @@ public interface SearchStrategy extends SearchProgress {
      * @param parent for constructing a ui tree. If null, no game tree is constructed.
      * @return the chosen move (ie the best move) (may be null if no next move).
      */
-    TwoPlayerMove search( TwoPlayerMove lastMove, SearchTreeNode parent );
+    M search(M lastMove, SearchTreeNode parent);
 
     /**
      * @return  parameters for defining the search.
@@ -41,4 +42,10 @@ public interface SearchStrategy extends SearchProgress {
      * @param listener event listener
      */
     void setGameTreeEventListener(IGameTreeViewable listener);
+
+    /**
+     * Moves are either evaluated from the current player's perspective, or always from player 1's perspective.
+     * Currently only used by tests to understand how to evaluate moves at a given ply.
+     */
+    EvaluationPerspective getEvaluationPerspective();
 }

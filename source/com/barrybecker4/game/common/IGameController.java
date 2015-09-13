@@ -20,12 +20,12 @@ import com.barrybecker4.game.common.player.PlayerList;
  *
  * @author Barry Becker
  */
-public interface IGameController {
+public interface IGameController<M extends Move, B extends IBoard<M>> {
 
     /**
      * @return the board representation object.
      */
-    IBoard getBoard();
+    B getBoard();
 
     /**
      * @return the class which shows the current state of the game board.
@@ -37,21 +37,21 @@ public interface IGameController {
      * retract the most recently played move
      * @return  the move which was undone (null returned if no prior move)
      */
-    Move undoLastMove();
+    M undoLastMove();
 
     /**
      * this makes an arbitrary move (assumed valid) and
      * adds it to the move list.
      * For two player games, calling this does not keep track of weights or the search.
      * Its most common use is for browsing the game tree.
-     *  @param m the move to play.
+     * @param m the move to play.
      */
-    void makeMove( Move m );
+    void makeMove(M m);
 
     /**
      * @return the list of moves made so far.
      */
-    MoveList getMoveList();
+    MoveList<M> getMoveList();
 
     /**
      * @return  the number of moves currently played.
